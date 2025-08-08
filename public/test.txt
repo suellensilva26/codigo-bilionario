@@ -1,3 +1,4 @@
-Deploy Test - 2025-08-08 18:15:00
-Sistema de registro corrigido
-Versão: 3.0.1
+Deploy Test - 2025-08-08 19:10:00
+Sistema de cursos corrigido
+Versão: 4.0.0
+MOCK_COURSES implementado

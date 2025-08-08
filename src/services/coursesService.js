@@ -68,10 +68,20 @@ const MOCK_COURSES = [
 export const coursesService = {
   // Get course by ID
   async getCourseById(courseId) {
-    if (IS_DEMO_MODE) {
-      // Return mock course data
-      const mockCourse = MOCK_COURSES.find(course => course.id === courseId)
-      if (!mockCourse) return null
+    try {
+      console.log('🎯 getCourseById called with:', courseId)
+      
+      if (IS_DEMO_MODE) {
+        console.log('🎭 Using demo mode, MOCK_COURSES:', MOCK_COURSES.length, 'courses')
+        
+        // Ensure courseId is a string
+        const courseIdStr = String(courseId)
+        
+        // Return mock course data
+        const mockCourse = MOCK_COURSES.find(course => String(course.id) === courseIdStr)
+        console.log('📚 Found course:', mockCourse ? mockCourse.title : 'Not found')
+        
+        if (!mockCourse) return null
       
       return {
         ...mockCourse,
@@ -107,9 +117,9 @@ export const coursesService = {
         
         O curso é totalmente prático, com exemplos reais e exercícios que você pode aplicar imediatamente no seu dia a dia.`
       }
-    }
-    
-    try {
+      }
+      
+      // Firebase fallback (não usado em demo)
       const docRef = doc(db, 'courses', courseId)
       const docSnap = await getDoc(docRef)
       
@@ -122,8 +132,23 @@ export const coursesService = {
       
       return null
     } catch (error) {
-      console.error('Error getting course:', error)
-      return null
+      console.error('❌ CRITICAL ERROR in getCourseById:', error)
+      // Return a fallback course to prevent crashes
+      return {
+        id: courseId,
+        title: 'Curso Indisponível',
+        description: 'Este curso está temporariamente indisponível.',
+        category: 'Geral',
+        level: 'beginner',
+        rating: 4.0,
+        students: 0,
+        duration: '0h 0m',
+        thumbnail: 'https://via.placeholder.com/400x300',
+        instructor: 'Sistema',
+        price: 0,
+        originalPrice: 0,
+        lessons: []
+      }
     }
   },
 
