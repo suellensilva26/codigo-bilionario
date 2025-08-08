@@ -1,40 +1,19 @@
 import api from './api'
+import { demoAuth } from '../lib/demoAuth'
 
-// Demo mode check
-const IS_DEMO_MODE = !import.meta.env.VITE_API_URL && window.location.hostname !== 'localhost'
+// Demo mode check - Sempre usar demo quando deployed
+const IS_DEMO_MODE = window.location.hostname === 'codigo-bilionario.vercel.app' || window.location.hostname !== 'localhost'
 
-// Mock data for demo
-const mockUser = {
-  id: 1,
-  name: 'Demo User',
-  email: 'demo@codigobilionario.com',
-  avatar: 'https://via.placeholder.com/150x150/FFD700/000?text=CB',
-  subscription: {
-    plan: 'premium',
-    status: 'active',
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-  }
-}
+console.log('🎭 Demo Mode:', IS_DEMO_MODE, 'Hostname:', window.location.hostname)
 
 export const authService = {
   // Login user
   async login(credentials) {
+    if (IS_DEMO_MODE) {
+      return await demoAuth.login(credentials)
+    }
+    
     try {
-      if (IS_DEMO_MODE) {
-        // Demo mode - simulate successful login
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate network delay
-        
-        // Basic validation
-        if (!credentials.email || !credentials.password) {
-          return { success: false, error: 'Email e senha são obrigatórios' }
-        }
-        
-        const token = 'demo-token-' + Date.now()
-        localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify(mockUser))
-        return { success: true, user: mockUser, token }
-      }
-      
       const response = await api.post('/auth/login', credentials)
       return { success: true, ...response.data }
     } catch (error) {
@@ -48,34 +27,11 @@ export const authService = {
 
   // Register new user
   async register(userData) {
+    if (IS_DEMO_MODE) {
+      return await demoAuth.register(userData)
+    }
+    
     try {
-      if (IS_DEMO_MODE) {
-        // Demo mode - simulate successful registration
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // Validate input
-        if (!userData.email || !userData.password || !userData.name) {
-          return { success: false, error: 'Todos os campos são obrigatórios' }
-        }
-        
-        if (userData.password.length < 6) {
-          return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' }
-        }
-        
-        const token = 'demo-token-' + Date.now()
-        const user = { 
-          ...mockUser, 
-          name: userData.name, 
-          email: userData.email,
-          uid: 'demo-uid-' + Date.now()
-        }
-        
-        localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify(user))
-        
-        return { success: true, user, token }
-      }
-      
       const response = await api.post('/auth/register', userData)
       return { success: true, ...response.data }
     } catch (error) {
@@ -89,8 +45,17 @@ export const authService = {
 
   // Logout user
   async logout() {
-    const response = await api.post('/auth/logout')
-    return response.data
+    if (IS_DEMO_MODE) {
+      return await demoAuth.logout()
+    }
+    
+    try {
+      const response = await api.post('/auth/logout')
+      return response.data
+    } catch (error) {
+      console.error('Logout error:', error)
+      return { success: true } // Always succeed logout
+    }
   },
 
   // Get current user profile
