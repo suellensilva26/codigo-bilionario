@@ -19,408 +19,453 @@ import {
   Brain,
   ChevronRight,
   Sparkles,
-  X
+  X,
+  BookOpen,
+  Award,
+  Zap,
+  Grid,
+  List
 } from 'lucide-react'
 
 // Components
 import CourseCard from '../components/common/CourseCard'
+import LoadingScreen from '../components/common/LoadingScreen'
 
-// Mock de cursos - Em produção virá da API
-const mockCourses = [
-  {
-    id: 1,
-    title: 'Marketing Digital Avançado',
-    instructor: 'Pedro Sobral',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Marketing+Digital',
-    category: 'marketing',
-    duration: '12h 30min',
-    students: 15420,
-    rating: 4.8,
-    level: 'Avançado',
-    modules: 24,
-    featured: true
-  },
-  {
-    id: 2,
-    title: 'Python para Data Science',
-    instructor: 'Ana Silva',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Python',
-    category: 'programacao',
-    duration: '18h 45min',
-    students: 23150,
-    rating: 4.9,
-    level: 'Intermediário',
-    modules: 32
-  },
-  {
-    id: 3,
-    title: 'Vendas no Instagram',
-    instructor: 'Carlos Maia',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Instagram',
-    category: 'vendas',
-    duration: '8h 15min',
-    students: 34820,
-    rating: 4.7,
-    level: 'Iniciante',
-    modules: 18
-  },
-  {
-    id: 4,
-    title: 'Design UI/UX Profissional',
-    instructor: 'Julia Costa',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=UI+UX',
-    category: 'design',
-    duration: '16h 20min',
-    students: 12340,
-    rating: 4.9,
-    level: 'Avançado',
-    modules: 28
-  },
-  {
-    id: 5,
-    title: 'Copywriting que Vende',
-    instructor: 'Rafael Oliveira',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Copywriting',
-    category: 'marketing',
-    duration: '10h 40min',
-    students: 19870,
-    rating: 4.8,
-    level: 'Intermediário',
-    modules: 20
-  },
-  {
-    id: 6,
-    title: 'Finanças Pessoais',
-    instructor: 'Mariana Santos',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Financas',
-    category: 'negocios',
-    duration: '6h 30min',
-    students: 45230,
-    rating: 4.6,
-    level: 'Iniciante',
-    modules: 15
-  },
-  {
-    id: 7,
-    title: 'Mindset Milionário',
-    instructor: 'Bruno Ferreira',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Mindset',
-    category: 'desenvolvimento',
-    duration: '5h 45min',
-    students: 67890,
-    rating: 4.5,
-    level: 'Iniciante',
-    modules: 12,
-    featured: true
-  },
-  {
-    id: 8,
-    title: 'E-commerce do Zero',
-    instructor: 'Fernanda Lima',
-    thumbnail: 'https://via.placeholder.com/400x225/1a1a1a/FFD700?text=Ecommerce',
-    category: 'negocios',
-    duration: '14h 20min',
-    students: 28450,
-    rating: 4.8,
-    level: 'Intermediário',
-    modules: 26
-  }
-]
+// Services
+import { coursesService, MOCK_COURSES } from '../services/coursesService'
+import useAuthStore from '../store/authStore'
 
-// Categorias disponíveis
-const categories = [
-  { id: 'all', name: 'Todos', icon: Sparkles, count: 247 },
-  { id: 'marketing', name: 'Marketing', icon: Target, count: 45 },
-  { id: 'programacao', name: 'Programação', icon: Code, count: 38 },
-  { id: 'vendas', name: 'Vendas', icon: DollarSign, count: 52 },
-  { id: 'design', name: 'Design', icon: Palette, count: 31 },
-  { id: 'negocios', name: 'Negócios', icon: Briefcase, count: 42 },
-  { id: 'desenvolvimento', name: 'Desenvolvimento Pessoal', icon: Brain, count: 39 }
-]
-
+// 📚 COURSES PAGE - CÓDIGO BILIONÁRIO
 const Courses = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const { user, hasActiveSubscription } = useAuthStore()
+  
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedLevel, setSelectedLevel] = useState('all')
+  const [sortBy, setSortBy] = useState('popular')
   const [showFilters, setShowFilters] = useState(false)
-  const [filteredCourses, setFilteredCourses] = useState(mockCourses)
+  const [viewMode, setViewMode] = useState('grid') // grid or list
+  
+  const [courses, setCourses] = useState([])
+  const [categories, setCategories] = useState([])
+  const [filteredCourses, setFilteredCourses] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Filtrar cursos baseado na categoria e busca
+  // Load courses and categories
   useEffect(() => {
-    let filtered = mockCourses
+    const loadData = async () => {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        // For demo mode, use mock data
+        const isDemoMode = window.location.hostname !== 'localhost'
+        
+        if (isDemoMode) {
+          // Use mock data for demo
+          setCourses(MOCK_COURSES)
+          setCategories([
+            { id: 'all', name: 'Todos os Cursos', icon: '📚', count: MOCK_COURSES.length },
+            { id: 'marketing', name: 'Marketing Digital', icon: '📱', count: 1 },
+            { id: 'copywriting', name: 'Copywriting', icon: '✍️', count: 1 },
+            { id: 'sales', name: 'Vendas', icon: '💼', count: 1 }
+          ])
+        } else {
+          // Load real data from Firebase
+          const [coursesResult, categoriesResult] = await Promise.all([
+            coursesService.getCourses(),
+            coursesService.getCategories()
+          ])
+          
+          if (coursesResult.success) {
+            setCourses(coursesResult.courses.length > 0 ? coursesResult.courses : MOCK_COURSES)
+          } else {
+            setCourses(MOCK_COURSES) // Fallback to mock data
+          }
+          
+          if (categoriesResult.success) {
+            setCategories([
+              { id: 'all', name: 'Todos os Cursos', icon: '📚', count: coursesResult.courses?.length || MOCK_COURSES.length },
+              ...categoriesResult.categories
+            ])
+          }
+        }
+      } catch (err) {
+        console.error('Error loading courses:', err)
+        setError('Erro ao carregar cursos')
+        setCourses(MOCK_COURSES) // Fallback to mock data
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-    // Filtro por categoria
+    loadData()
+  }, [])
+
+  // Filter and sort courses
+  useEffect(() => {
+    let filtered = [...courses]
+
+    // Apply category filter
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(course => course.category === selectedCategory)
     }
 
-    // Filtro por busca
+    // Apply level filter
+    if (selectedLevel !== 'all') {
+      filtered = filtered.filter(course => course.level === selectedLevel)
+    }
+
+    // Apply search filter
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
       filtered = filtered.filter(course => 
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+        course.title.toLowerCase().includes(searchLower) ||
+        course.instructor.toLowerCase().includes(searchLower) ||
+        course.description?.toLowerCase().includes(searchLower)
       )
     }
 
+    // Apply sorting
+    switch (sortBy) {
+      case 'popular':
+        filtered.sort((a, b) => (b.students || 0) - (a.students || 0))
+        break
+      case 'rating':
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        break
+      case 'price-low':
+        filtered.sort((a, b) => (a.price || 0) - (b.price || 0))
+        break
+      case 'price-high':
+        filtered.sort((a, b) => (b.price || 0) - (a.price || 0))
+        break
+      default:
+        break
+    }
+
     setFilteredCourses(filtered)
-  }, [selectedCategory, searchTerm])
+  }, [courses, selectedCategory, selectedLevel, searchTerm, sortBy])
 
-  // Course Card Component
-  const CourseCard = ({ course }) => (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: -8 }}
-      className="group relative bg-gradient-to-br from-cb-gray-dark to-cb-black rounded-xl overflow-hidden border border-cb-gray-dark hover:border-cb-gold/30 transition-all duration-300"
-    >
-      <Link to={`/course/${course.id}`}>
-        {/* Thumbnail */}
-        <div className="relative aspect-video overflow-hidden">
-          <img 
-            src={course.thumbnail} 
-            alt={course.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          
-          {/* Overlay com Play Button */}
-          <div className="absolute inset-0 bg-gradient-to-t from-cb-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-16 h-16 bg-cb-gold rounded-full flex items-center justify-center shadow-lg shadow-cb-gold/30"
-              >
-                <Play className="w-8 h-8 text-cb-black ml-1" fill="currentColor" />
-              </motion.div>
-            </div>
-          </div>
+  // Handle search
+  const handleSearch = async (term) => {
+    setSearchTerm(term)
+    
+    if (term.length > 2) {
+      setIsLoading(true)
+      const result = await coursesService.searchCourses(term)
+      if (result.success) {
+        setCourses(result.courses)
+      }
+      setIsLoading(false)
+    }
+  }
 
-          {/* Badge Featured */}
-          {course.featured && (
-            <div className="absolute top-3 left-3 bg-gradient-to-r from-cb-gold to-cb-gold-dark px-3 py-1 rounded-full">
-              <span className="text-cb-black text-xs font-bold">DESTAQUE</span>
-            </div>
-          )}
-
-          {/* Duration */}
-          <div className="absolute bottom-3 right-3 bg-cb-black/80 backdrop-blur px-2 py-1 rounded">
-            <span className="text-cb-white text-xs flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {course.duration}
-            </span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-5">
-          {/* Title */}
-          <h3 className="text-lg font-bold text-cb-white mb-1 line-clamp-2 group-hover:text-cb-gold transition-colors">
-            {course.title}
-          </h3>
-
-          {/* Instructor */}
-          <p className="text-sm text-cb-gray-light mb-3">
-            por {course.instructor}
-          </p>
-
-          {/* Stats */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3 text-xs text-cb-gray-light">
-              <span className="flex items-center gap-1">
-                <Star className="w-3 h-3 text-cb-gold" fill="currentColor" />
-                {course.rating}
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {course.students.toLocaleString('pt-BR')}
-              </span>
-            </div>
-            <span className="text-xs font-medium text-cb-gold">
-              {course.modules} módulos
-            </span>
-          </div>
-
-          {/* Level Badge */}
-          <div className="flex items-center justify-between">
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              course.level === 'Iniciante' ? 'bg-green-500/20 text-green-400' :
-              course.level === 'Intermediário' ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
-              {course.level}
-            </span>
-            
-            {/* Arrow Icon */}
-            <ChevronRight className="w-4 h-4 text-cb-gray-light group-hover:text-cb-gold transition-colors" />
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  )
+  if (isLoading) {
+    return <LoadingScreen message="Carregando cursos..." />
+  }
 
   return (
     <>
       <Helmet>
-        <title>Biblioteca de Cursos - Código Bilionário</title>
-        <meta name="description" content="Acesse mais de 200 cursos completos dos maiores especialistas do mercado" />
+        <title>Cursos - Código Bilionário | 200+ Cursos Digitais</title>
+        <meta name="description" content="Acesse mais de 200 cursos digitais por R$ 97/mês. Marketing Digital, Copywriting, Vendas e muito mais!" />
       </Helmet>
 
-      <div className="min-h-screen pb-20">
-        {/* Header Section */}
-        <div className="bg-gradient-to-b from-cb-black via-cb-gray-dark/20 to-cb-black pt-8 pb-12">
-          <div className="container mx-auto px-4">
+      <div className="min-h-screen bg-black">
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-br from-cb-gray-dark to-black border-b border-gray-800">
+          <div className="absolute inset-0 bg-gradient-to-r from-cb-gold/5 to-transparent" />
+          
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              className="text-center mb-8"
             >
-              {/* Title */}
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="text-4xl md:text-5xl font-bold font-poppins text-cb-gold mb-2">
-                    Biblioteca Completa
-                  </h1>
-                  <p className="text-cb-gray-light text-lg">
-                    <span className="text-cb-gold font-bold">247 cursos</span> no seu arsenal digital
-                  </p>
-                </div>
-                
-                {/* Filter Toggle Mobile */}
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="md:hidden p-3 bg-cb-gray-dark rounded-lg border border-cb-gray-medium"
-                >
-                  <Filter className="w-5 h-5 text-cb-gold" />
-                </button>
+              <div className="flex items-center justify-center space-x-2 text-cb-gold mb-4">
+                <BookOpen className="w-6 h-6" />
+                <span className="font-semibold">BIBLIOTECA DIGITAL</span>
               </div>
+              
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Catálogo de Cursos
+              </h1>
+              
+              <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+                Mais de <strong className="text-cb-gold">200 cursos</strong> dos principais especialistas 
+                em marketing digital, vendas e empreendedorismo
+              </p>
+            </motion.div>
 
-              {/* Search Bar */}
-              <div className="relative max-w-2xl mx-auto mb-8">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cb-gray-light" />
+            {/* Search Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="max-w-2xl mx-auto"
+            >
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Buscar por curso ou instrutor..."
+                  placeholder="Buscar cursos, instrutores ou temas..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-cb-gray-dark border border-cb-gray-medium rounded-lg text-cb-white placeholder-cb-gray-light focus:border-cb-gold focus:outline-none focus:ring-2 focus:ring-cb-gold/20 transition-all"
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="block w-full pl-12 pr-4 py-4 border border-gray-700 rounded-xl bg-cb-gray-dark text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cb-gold focus:border-transparent text-lg"
                 />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-4 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-5 h-5 text-cb-gray-light hover:text-cb-white" />
-                  </button>
-                )}
-              </div>
-
-              {/* Categories - Desktop */}
-              <div className="hidden md:flex items-center justify-center gap-2 flex-wrap">
-                {categories.map((category) => {
-                  const Icon = category.icon
-                  return (
-                    <motion.button
-                      key={category.id}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-                        selectedCategory === category.id
-                          ? 'bg-cb-gold text-cb-black border-cb-gold'
-                          : 'bg-cb-gray-dark border-cb-gray-medium text-cb-gray-light hover:border-cb-gold/50'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span className="font-medium">{category.name}</span>
-                      <span className="text-sm opacity-70">({category.count})</span>
-                    </motion.button>
-                  )
-                })}
               </div>
             </motion.div>
           </div>
         </div>
 
-        {/* Mobile Filters */}
-        <AnimatePresence>
-          {showFilters && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar Filters */}
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="md:hidden overflow-hidden"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:w-80 flex-shrink-0"
             >
-              <div className="container mx-auto px-4 py-4">
-                <div className="flex flex-col gap-2">
-                  {categories.map((category) => {
-                    const Icon = category.icon
-                    return (
+              <div className="bg-cb-gray-dark rounded-xl p-6 border border-gray-800 sticky top-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-white">Filtros</h3>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('all')
+                      setSelectedLevel('all')
+                      setSearchTerm('')
+                    }}
+                    className="text-cb-gold hover:text-yellow-400 text-sm transition-colors"
+                  >
+                    Limpar
+                  </button>
+                </div>
+
+                {/* Categories */}
+                <div className="mb-6">
+                  <h4 className="text-white font-medium mb-4">Categorias</h4>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
                       <button
                         key={category.id}
-                        onClick={() => {
-                          setSelectedCategory(category.id)
-                          setShowFilters(false)
-                        }}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
                           selectedCategory === category.id
-                            ? 'bg-cb-gold text-cb-black'
-                            : 'bg-cb-gray-dark text-cb-gray-light'
+                            ? 'bg-cb-gold text-black'
+                            : 'text-gray-300 hover:bg-gray-800'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
-                        <span className="font-medium flex-1 text-left">{category.name}</span>
-                        <span className="text-sm opacity-70">({category.count})</span>
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg">{category.icon}</span>
+                          <span className="font-medium">{category.name}</span>
+                        </div>
+                        <span className="text-sm opacity-75">{category.count}</span>
                       </button>
-                    )
-                  })}
+                    ))}
+                  </div>
+                </div>
+
+                {/* Level Filter */}
+                <div className="mb-6">
+                  <h4 className="text-white font-medium mb-4">Nível</h4>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'all', name: 'Todos os Níveis' },
+                      { id: 'Iniciante', name: 'Iniciante' },
+                      { id: 'Intermediário', name: 'Intermediário' },
+                      { id: 'Avançado', name: 'Avançado' }
+                    ].map((level) => (
+                      <button
+                        key={level.id}
+                        onClick={() => setSelectedLevel(level.id)}
+                        className={`w-full p-3 rounded-lg text-left transition-colors ${
+                          selectedLevel === level.id
+                            ? 'bg-cb-gold text-black'
+                            : 'text-gray-300 hover:bg-gray-800'
+                        }`}
+                      >
+                        {level.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort Options */}
+                <div>
+                  <h4 className="text-white font-medium mb-4">Ordenar por</h4>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-cb-gold"
+                  >
+                    <option value="popular">Mais Populares</option>
+                    <option value="rating">Melhor Avaliados</option>
+                    <option value="newest">Mais Recentes</option>
+                    <option value="price-low">Menor Preço</option>
+                    <option value="price-high">Maior Preço</option>
+                  </select>
                 </div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Course Grid */}
-        <div className="container mx-auto px-4 pt-8">
-          {filteredCourses.length > 0 ? (
-            <motion.div 
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredCourses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
-              <Search className="w-16 h-16 text-cb-gray-medium mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-cb-white mb-2">
-                Nenhum curso encontrado
-              </h3>
-              <p className="text-cb-gray-light">
-                Tente buscar por outros termos ou categorias
-              </p>
-            </motion.div>
-          )}
+            {/* Main Content */}
+            <div className="flex-1">
+              {/* Results Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {filteredCourses.length} curso{filteredCourses.length !== 1 ? 's' : ''} encontrado{filteredCourses.length !== 1 ? 's' : ''}
+                  </h2>
+                  {searchTerm && (
+                    <p className="text-gray-400 mt-1">
+                      Resultados para "{searchTerm}"
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  {/* View Mode Toggle */}
+                  <div className="flex bg-gray-800 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded transition-colors ${
+                        viewMode === 'grid' ? 'bg-cb-gold text-black' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <Grid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded transition-colors ${
+                        viewMode === 'list' ? 'bg-cb-gold text-black' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Mobile Filter Toggle */}
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="lg:hidden flex items-center space-x-2 px-4 py-2 bg-cb-gold text-black rounded-lg font-medium"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Filtros</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Error State */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-6">
+                  <p className="text-red-400 text-center">{error}</p>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {filteredCourses.length === 0 && !isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center py-16"
+                >
+                  <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    Nenhum curso encontrado
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    Tente ajustar os filtros ou buscar por outros termos
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm('')
+                      setSelectedCategory('all')
+                      setSelectedLevel('all')
+                    }}
+                    className="bg-cb-gold hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg transition-colors"
+                  >
+                    Ver Todos os Cursos
+                  </button>
+                </motion.div>
+              )}
+
+              {/* Courses Grid/List */}
+              {filteredCourses.length > 0 && (
+                <motion.div
+                  layout
+                  className={
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+                      : 'space-y-6'
+                  }
+                >
+                  <AnimatePresence>
+                    {filteredCourses.map((course) => (
+                      <CourseCard 
+                        key={course.id} 
+                        course={course} 
+                        viewMode={viewMode}
+                        hasAccess={hasActiveSubscription()}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+
+              {/* Load More Button */}
+              {filteredCourses.length > 0 && filteredCourses.length >= 20 && (
+                <div className="text-center mt-12">
+                  <button className="bg-cb-gold hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg transition-colors">
+                    Carregar Mais Cursos
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Load More Button */}
-        {filteredCourses.length >= 8 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="container mx-auto px-4 mt-12 text-center"
-          >
-            <button className="px-8 py-3 bg-gradient-to-r from-cb-gold to-cb-gold-dark text-cb-black font-bold rounded-lg hover:shadow-lg hover:shadow-cb-gold/30 transition-all">
-              Carregar Mais Cursos
-            </button>
-          </motion.div>
+        {/* CTA Section */}
+        {!hasActiveSubscription() && (
+          <div className="bg-gradient-to-r from-cb-gold/10 to-transparent border-t border-gray-800 mt-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
+              >
+                <div className="w-16 h-16 bg-cb-gold rounded-xl flex items-center justify-center mx-auto mb-6">
+                  <Award className="w-8 h-8 text-black" />
+                </div>
+                
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Acesse TODOS os Cursos
+                </h2>
+                
+                <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                  Por apenas <strong className="text-cb-gold">R$ 97/mês</strong>, tenha acesso completo 
+                  a mais de 200 cursos digitais dos principais especialistas
+                </p>
+                
+                <Link
+                  to="/subscription"
+                  className="inline-flex items-center space-x-2 bg-cb-gold hover:bg-yellow-400 text-black font-bold py-4 px-8 rounded-lg transition-colors"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>COMEÇAR AGORA</span>
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </motion.div>
+            </div>
+          </div>
         )}
       </div>
     </>
