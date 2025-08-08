@@ -232,6 +232,35 @@ const useAuthStore = create(
         const requiredLevel = planHierarchy[requiredPlan] || 0
         
         return userPlanLevel >= requiredLevel
+      },
+
+      // Initialize authentication - DEMO MODE
+      initializeAuth: async () => {
+        console.log('🎭 Inicializando autenticação em modo DEMO')
+        
+        // Simular delay mínimo
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Verificar usuário salvo no localStorage
+        const savedUser = localStorage.getItem('current_demo_user')
+        
+        if (savedUser) {
+          try {
+            const user = JSON.parse(savedUser)
+            set({
+              user,
+              isAuthenticated: true,
+              isInitialized: true
+            })
+            console.log('✅ Usuário demo restaurado:', user.email)
+          } catch (error) {
+            console.error('Erro ao restaurar usuário:', error)
+            set({ isInitialized: true })
+          }
+        } else {
+          set({ isInitialized: true })
+          console.log('✅ Modo demo iniciado - sem usuário logado')
+        }
       }
     }),
     {
