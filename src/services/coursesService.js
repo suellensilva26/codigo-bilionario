@@ -15,8 +15,99 @@ import {
 import { analyticsService } from '../lib/firebase'
 import toast from 'react-hot-toast'
 
+// 🎭 DEMO MODE CHECK
+const IS_DEMO_MODE = true // Forçando demo sempre
+
 // 📚 COURSES SERVICE - CÓDIGO BILIONÁRIO
 export const coursesService = {
+  // Get course by ID
+  async getCourseById(courseId) {
+    if (IS_DEMO_MODE) {
+      // Return mock course data
+      const mockCourse = MOCK_COURSES.find(course => course.id === courseId)
+      if (!mockCourse) return null
+      
+      return {
+        ...mockCourse,
+        lessons: [
+          {
+            id: '1',
+            title: 'Introdução ao Curso',
+            description: 'Bem-vindo ao curso! Nesta aula vamos conhecer o que você vai aprender.',
+            duration: '15:30',
+            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            completed: false
+          },
+          {
+            id: '2',
+            title: 'Conceitos Fundamentais',
+            description: 'Vamos entender os conceitos básicos que você precisa saber.',
+            duration: '22:15',
+            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            completed: false
+          },
+          {
+            id: '3',
+            title: 'Prática Guiada',
+            description: 'Hora de colocar a mão na massa com exercícios práticos.',
+            duration: '35:45',
+            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            completed: false
+          }
+        ],
+        longDescription: `Este é um curso completo sobre ${mockCourse.title}. 
+        
+        Você vai aprender desde os conceitos básicos até técnicas avançadas que vão te ajudar a dominar completamente este assunto.
+        
+        O curso é totalmente prático, com exemplos reais e exercícios que você pode aplicar imediatamente no seu dia a dia.`
+      }
+    }
+    
+    try {
+      const docRef = doc(db, 'courses', courseId)
+      const docSnap = await getDoc(docRef)
+      
+      if (docSnap.exists()) {
+        return {
+          id: docSnap.id,
+          ...docSnap.data()
+        }
+      }
+      
+      return null
+    } catch (error) {
+      console.error('Error getting course:', error)
+      return null
+    }
+  },
+
+  // Get course progress
+  async getCourseProgress(courseId) {
+    if (IS_DEMO_MODE) {
+      // Return mock progress
+      return {
+        courseId,
+        percentage: Math.floor(Math.random() * 100),
+        completedLessons: [],
+        lastWatched: new Date().toISOString()
+      }
+    }
+    
+    // Firebase implementation would go here
+    return { percentage: 0, completedLessons: [] }
+  },
+
+  // Mark lesson as complete
+  async markLessonComplete(courseId, lessonId) {
+    if (IS_DEMO_MODE) {
+      console.log(`✅ Aula ${lessonId} do curso ${courseId} marcada como completa (demo)`)
+      return true
+    }
+    
+    // Firebase implementation would go here
+    return true
+  },
+
   // Get all courses with filters
   async getCourses({ category = null, search = '', level = null, limit: queryLimit = 50 } = {}) {
     try {
