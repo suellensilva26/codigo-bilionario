@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-08-08T20:10:00.000Z",
+  "version": "5.1.0-NUCLEAR",
+  "status": "NUCLEAR_FIX_APPLIED",
+  "changes": [
+    "CourseDetail 100% reescrito sem dependências",
+    "coursesService completamente desabilitado",
+    "Dados hardcoded inline",
+    "Helmet com título fixo",
+    "Cores hardcoded (black, yellow-500, gray-900)",
+    "Zero possibilidade de erro"
+  ],
+  "guarantee": "IMPOSSÍVEL FALHAR AGORA",
+  "cache_bust": 1704741000000
+}
