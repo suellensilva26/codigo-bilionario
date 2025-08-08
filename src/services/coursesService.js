@@ -18,6 +18,52 @@ import toast from 'react-hot-toast'
 // 🎭 DEMO MODE CHECK
 const IS_DEMO_MODE = true // Forçando demo sempre
 
+// 🎯 MOCK COURSES DATA
+const MOCK_COURSES = [
+  {
+    id: '1',
+    title: 'Marketing Digital Avançado',
+    description: 'Domine as estratégias de marketing digital que realmente funcionam',
+    category: 'Marketing Digital',
+    level: 'intermediary',
+    rating: 4.8,
+    students: 15420,
+    duration: '8h 30m',
+    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
+    instructor: 'Carlos Mendes',
+    price: 297,
+    originalPrice: 497
+  },
+  {
+    id: '2', 
+    title: 'Desenvolvimento Pessoal Premium',
+    description: 'Transforme sua mentalidade e alcance seus objetivos',
+    category: 'Desenvolvimento Pessoal',
+    level: 'beginner',
+    rating: 4.9,
+    students: 8760,
+    duration: '6h 15m',
+    thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+    instructor: 'Ana Silva',
+    price: 197,
+    originalPrice: 397
+  },
+  {
+    id: '3',
+    title: 'Investimentos e Finanças',
+    description: 'Aprenda a investir seu dinheiro de forma inteligente',
+    category: 'Finanças',
+    level: 'advanced',
+    rating: 4.7,
+    students: 12340,
+    duration: '12h 45m',
+    thumbnail: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400&h=300&fit=crop',
+    instructor: 'Roberto Santos',
+    price: 397,
+    originalPrice: 697
+  }
+]
+
 // 📚 COURSES SERVICE - CÓDIGO BILIONÁRIO
 export const coursesService = {
   // Get course by ID
@@ -110,6 +156,34 @@ export const coursesService = {
 
   // Get all courses with filters
   async getCourses({ category = null, search = '', level = null, limit: queryLimit = 50 } = {}) {
+    if (IS_DEMO_MODE) {
+      // Return mock courses with filters
+      let courses = [...MOCK_COURSES]
+      
+      // Apply filters
+      if (category) {
+        courses = courses.filter(course => course.category === category)
+      }
+      
+      if (level) {
+        courses = courses.filter(course => course.level === level)
+      }
+      
+      if (search) {
+        const searchLower = search.toLowerCase()
+        courses = courses.filter(course => 
+          course.title.toLowerCase().includes(searchLower) ||
+          course.description.toLowerCase().includes(searchLower) ||
+          course.instructor.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      // Apply limit
+      courses = courses.slice(0, queryLimit)
+      
+      return courses
+    }
+
     try {
       let coursesQuery = collection(db, 'courses')
       

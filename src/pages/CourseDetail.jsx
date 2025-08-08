@@ -39,9 +39,13 @@ const CourseDetail = () => {
   const loadCourse = async () => {
     try {
       setLoading(true)
+      console.log('🎯 Carregando curso:', courseId)
+      
       const courseData = await coursesService.getCourseById(courseId)
+      console.log('📚 Dados do curso:', courseData)
       
       if (!courseData) {
+        console.log('❌ Curso não encontrado, redirecionando...')
         navigate('/courses')
         return
       }
@@ -108,8 +112,8 @@ const CourseDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{course.title} - Código Bilionário</title>
-        <meta name="description" content={course.description} />
+        <title>{course?.title || 'Curso'} - Código Bilionário</title>
+        <meta name="description" content={course?.description || 'Curso do Código Bilionário'} />
       </Helmet>
 
       <div className="min-h-screen bg-cb-black text-cb-white">
