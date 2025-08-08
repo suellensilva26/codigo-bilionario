@@ -120,13 +120,31 @@ export const demoAuth = {
         DEMO_USERS.push(...users.filter(u => !DEMO_USERS.find(existing => existing.email === u.email)))
       }
       
-      // Find user
-      const user = DEMO_USERS.find(u => 
+      // Find user (modo demo flexível)
+      let user = DEMO_USERS.find(u => 
         u.email === credentials.email && u.password === credentials.password
       )
       
+      // Se não encontrar, criar usuário automaticamente para demo
       if (!user) {
-        throw new Error('Email ou senha incorretos')
+        console.log('🎭 Usuário não encontrado, criando automaticamente para demo:', credentials.email)
+        user = {
+          id: `demo-${Date.now()}`,
+          uid: `demo-uid-${Date.now()}`,
+          name: credentials.email.split('@')[0],
+          email: credentials.email,
+          password: credentials.password,
+          phone: '(11) 99999-9999',
+          subscription: {
+            plan: 'premium',
+            status: 'active',
+            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          createdAt: new Date().toISOString(),
+          emailVerified: true
+        }
+        DEMO_USERS.push(user)
+        localStorage.setItem('demo_users', JSON.stringify(DEMO_USERS))
       }
       
       // Create session

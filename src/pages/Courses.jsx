@@ -18,6 +18,7 @@ import {
   Heart,
   Brain,
   ChevronRight,
+  ArrowRight,
   Sparkles,
   X,
   BookOpen,
