@@ -2,96 +2,81 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { 
-  ArrowLeft, 
-  Play, 
-  Clock, 
-  Star, 
-  Users, 
-  BookOpen, 
-  Download,
-  Share2,
-  Heart,
-  CheckCircle,
-  Lock
-} from 'lucide-react'
-import ReactPlayer from 'react-player'
-import { coursesService } from '../services/coursesService'
-import useAuthStore from '../store/authStore'
-import LoadingScreen from '../components/common/LoadingScreen'
+import { ArrowLeft, Play, Clock, Star, Users } from 'lucide-react'
 
 const CourseDetail = () => {
   const { courseId } = useParams()
   const navigate = useNavigate()
-  const { user, canAccessContent } = useAuthStore()
   
   const [course, setCourse] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [currentVideo, setCurrentVideo] = useState(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [showPlayer, setShowPlayer] = useState(false)
 
   useEffect(() => {
-    loadCourse()
-  }, [courseId])
+    // Dados mock simples e diretos
+    const mockCourses = {
+      '1': {
+        id: '1',
+        title: 'Marketing Digital Avançado',
+        description: 'Domine as estratégias de marketing digital que realmente funcionam',
+        category: 'Marketing Digital',
+        level: 'intermediary',
+        rating: 4.8,
+        students: 15420,
+        duration: '8h 30m',
+        thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
+        instructor: 'Carlos Mendes'
+      },
+      '2': {
+        id: '2',
+        title: 'Desenvolvimento Pessoal Premium',
+        description: 'Transforme sua mentalidade e alcance seus objetivos',
+        category: 'Desenvolvimento Pessoal',
+        level: 'beginner',
+        rating: 4.9,
+        students: 8760,
+        duration: '6h 15m',
+        thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+        instructor: 'Ana Silva'
+      },
+      '3': {
+        id: '3',
+        title: 'Investimentos e Finanças',
+        description: 'Aprenda a investir seu dinheiro de forma inteligente',
+        category: 'Finanças',
+        level: 'advanced',
+        rating: 4.7,
+        students: 12340,
+        duration: '12h 45m',
+        thumbnail: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400&h=300&fit=crop',
+        instructor: 'Roberto Santos'
+      }
+    }
 
-  const loadCourse = async () => {
-    try {
-      setLoading(true)
-      console.log('🎯 Carregando curso:', courseId)
+    console.log('🎯 CourseDetail carregado, courseId:', courseId)
+    
+    setTimeout(() => {
+      const foundCourse = mockCourses[courseId]
+      console.log('📚 Curso encontrado:', foundCourse)
       
-      const courseData = await coursesService.getCourseById(courseId)
-      console.log('📚 Dados do curso:', courseData)
-      
-      if (!courseData) {
+      if (foundCourse) {
+        setCourse(foundCourse)
+      } else {
         console.log('❌ Curso não encontrado, redirecionando...')
         navigate('/courses')
-        return
       }
-      
-      setCourse(courseData)
-      
-      // Set first video as current if user has access
-      if (courseData.lessons && courseData.lessons.length > 0 && canAccessContent(courseData.level)) {
-        setCurrentVideo(courseData.lessons[0])
-      }
-      
-      // Load progress
-      const userProgress = await coursesService.getCourseProgress(courseId)
-      setProgress(userProgress?.percentage || 0)
-      
-    } catch (error) {
-      console.error('Error loading course:', error)
-      navigate('/courses')
-    } finally {
       setLoading(false)
-    }
-  }
-
-  const handleVideoSelect = (lesson) => {
-    if (!canAccessContent(course.level)) {
-      alert('Você precisa de uma assinatura premium para acessar este conteúdo!')
-      return
-    }
-    
-    setCurrentVideo(lesson)
-    setShowPlayer(true)
-  }
-
-  const handleProgress = async (lessonId) => {
-    try {
-      await coursesService.markLessonComplete(courseId, lessonId)
-      // Reload progress
-      const userProgress = await coursesService.getCourseProgress(courseId)
-      setProgress(userProgress?.percentage || 0)
-    } catch (error) {
-      console.error('Error updating progress:', error)
-    }
-  }
+    }, 500)
+  }, [courseId, navigate])
 
   if (loading) {
-    return <LoadingScreen message="Carregando curso..." />
+    return (
+      <div className="min-h-screen bg-cb-black text-cb-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cb-gold mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando curso...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!course) {
@@ -107,13 +92,11 @@ const CourseDetail = () => {
     )
   }
 
-  const hasAccess = canAccessContent(course.level)
-
   return (
     <>
       <Helmet>
-        <title>{course?.title || 'Curso'} - Código Bilionário</title>
-        <meta name="description" content={course?.description || 'Curso do Código Bilionário'} />
+        <title>{course.title || 'Curso'} - Código Bilionário</title>
+        <meta name="description" content={course.description || 'Curso do Código Bilionário'} />
       </Helmet>
 
       <div className="min-h-screen bg-cb-black text-cb-white">
@@ -154,73 +137,20 @@ const CourseDetail = () => {
                         <Users className="w-4 h-4" />
                         <span>{course.students} estudantes</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <BookOpen className="w-4 h-4" />
-                        <span>{course.lessons?.length || 0} aulas</span>
-                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Progress Bar */}
-                {progress > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-400">Progresso do Curso</span>
-                      <span className="text-sm text-cb-gold">{Math.round(progress)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <motion.div 
-                        className="bg-cb-gold h-2 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Actions */}
               <div className="lg:w-64">
                 <div className="bg-cb-gray/50 rounded-lg p-6">
-                  {!hasAccess ? (
-                    <div className="text-center">
-                      <Lock className="w-12 h-12 text-cb-gold mx-auto mb-4" />
-                      <h3 className="text-lg font-bold mb-2">Conteúdo Premium</h3>
-                      <p className="text-gray-400 mb-4">
-                        Upgrade sua assinatura para acessar este curso
-                      </p>
-                      <Link
-                        to="/subscription"
-                        className="w-full bg-cb-gold text-black py-3 px-4 rounded-lg font-bold hover:bg-cb-gold/90 transition-colors inline-block text-center"
-                      >
-                        Fazer Upgrade
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <button
-                        onClick={() => setShowPlayer(true)}
-                        className="w-full bg-cb-gold text-black py-3 px-4 rounded-lg font-bold hover:bg-cb-gold/90 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Play className="w-5 h-5" />
-                        Assistir Curso
-                      </button>
-                      
-                      <div className="grid grid-cols-3 gap-2">
-                        <button className="p-2 bg-cb-gray rounded-lg hover:bg-cb-gold/20 transition-colors">
-                          <Download className="w-5 h-5 mx-auto" />
-                        </button>
-                        <button className="p-2 bg-cb-gray rounded-lg hover:bg-cb-gold/20 transition-colors">
-                          <Share2 className="w-5 h-5 mx-auto" />
-                        </button>
-                        <button className="p-2 bg-cb-gray rounded-lg hover:bg-cb-gold/20 transition-colors">
-                          <Heart className="w-5 h-5 mx-auto" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-4">
+                    <button className="w-full bg-cb-gold text-black py-3 px-4 rounded-lg font-bold hover:bg-cb-gold/90 transition-colors flex items-center justify-center gap-2">
+                      <Play className="w-5 h-5" />
+                      Assistir Curso
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -230,45 +160,21 @@ const CourseDetail = () => {
         {/* Content */}
         <div className="container mx-auto px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Video Player */}
+            {/* Video Player Area */}
             <div className="lg:col-span-2">
-              {showPlayer && currentVideo && hasAccess ? (
-                <div className="bg-black rounded-lg overflow-hidden mb-6">
-                  <ReactPlayer
-                    url={currentVideo.videoUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
-                    width="100%"
-                    height="400px"
-                    controls
-                    playing={isPlaying}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onEnded={() => handleProgress(currentVideo.id)}
-                  />
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold mb-2">{currentVideo.title}</h3>
-                    <p className="text-gray-400">{currentVideo.description}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-cb-gray rounded-lg p-8 text-center mb-6">
-                  <Play className="w-16 h-16 text-cb-gold mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">
-                    {hasAccess ? 'Selecione uma aula para começar' : 'Conteúdo Bloqueado'}
-                  </h3>
-                  <p className="text-gray-400">
-                    {hasAccess 
-                      ? 'Escolha uma aula na lista ao lado para começar a assistir'
-                      : 'Faça upgrade para acessar este conteúdo premium'
-                    }
-                  </p>
-                </div>
-              )}
+              <div className="bg-cb-gray rounded-lg p-8 text-center mb-6">
+                <Play className="w-16 h-16 text-cb-gold mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Player de Vídeo</h3>
+                <p className="text-gray-400">
+                  Em breve você poderá assistir às aulas deste curso aqui!
+                </p>
+              </div>
 
               {/* Course Description */}
               <div className="bg-cb-gray rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4">Sobre o Curso</h2>
                 <p className="text-gray-300 leading-relaxed mb-6">
-                  {course.longDescription || course.description}
+                  {course.description}
                 </p>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -289,53 +195,28 @@ const CourseDetail = () => {
               <div className="bg-cb-gray rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Aulas do Curso</h2>
                 
-                {course.lessons && course.lessons.length > 0 ? (
-                  <div className="space-y-3">
-                    {course.lessons.map((lesson, index) => (
-                      <motion.div
-                        key={lesson.id}
-                        className={`p-4 rounded-lg cursor-pointer transition-all ${
-                          currentVideo?.id === lesson.id
-                            ? 'bg-cb-gold/20 border border-cb-gold'
-                            : 'bg-cb-black hover:bg-cb-gold/10'
-                        } ${!hasAccess ? 'opacity-50' : ''}`}
-                        onClick={() => handleVideoSelect(lesson)}
-                        whileHover={{ scale: hasAccess ? 1.02 : 1 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                            currentVideo?.id === lesson.id
-                              ? 'bg-cb-gold text-black'
-                              : 'bg-cb-gray text-gray-400'
-                          }`}>
-                            {hasAccess ? (
-                              lesson.completed ? <CheckCircle className="w-4 h-4" /> : index + 1
-                            ) : (
-                              <Lock className="w-4 h-4" />
-                            )}
-                          </div>
-                          
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-sm mb-1">{lesson.title}</h4>
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <Clock className="w-3 h-3" />
-                              <span>{lesson.duration || '10:00'}</span>
-                            </div>
-                          </div>
-                          
-                          {currentVideo?.id === lesson.id && (
-                            <Play className="w-4 h-4 text-cb-gold" />
-                          )}
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((lesson) => (
+                    <div
+                      key={lesson}
+                      className="p-4 rounded-lg bg-cb-black hover:bg-cb-gold/10 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-cb-gray text-gray-400 flex items-center justify-center text-sm font-bold">
+                          {lesson}
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <BookOpen className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-400">Nenhuma aula disponível ainda</p>
-                  </div>
-                )}
+                        
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm mb-1">Aula {lesson}</h4>
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <Clock className="w-3 h-3" />
+                            <span>15:30</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

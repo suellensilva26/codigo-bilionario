@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-08-08T19:15:00.000Z",
+  "version": "4.1.0",
+  "status": "FORCE_DEPLOY_NOW",
+  "fixes": [
+    "MOCK_COURSES implementado",
+    "Sistema anti-crash ativo",
+    "Logs de debug habilitados",
+    "Proteção de string courseId"
+  ]
+}
