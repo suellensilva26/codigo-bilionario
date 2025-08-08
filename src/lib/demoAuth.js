@@ -25,6 +25,8 @@ export const demoAuth = {
   // Register new user (demo)
   async register(userData) {
     try {
+      console.log('🎭 DEMO AUTH: Iniciando registro com dados:', userData)
+      
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 1500))
       

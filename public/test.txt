@@ -1,0 +1,3 @@
+Deploy Test - 2025-08-08 18:15:00
+Sistema de registro corrigido
+Versão: 3.0.1
