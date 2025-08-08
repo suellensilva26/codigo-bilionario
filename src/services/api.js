@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000
+const IS_DEMO_MODE = !import.meta.env.VITE_API_URL && window.location.hostname !== 'localhost'
 
 // Create axios instance
 const api = axios.create({

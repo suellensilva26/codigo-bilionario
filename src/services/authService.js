@@ -1,14 +1,49 @@
 import api from './api'
 
+// Demo mode check
+const IS_DEMO_MODE = !import.meta.env.VITE_API_URL && window.location.hostname !== 'localhost'
+
+// Mock data for demo
+const mockUser = {
+  id: 1,
+  name: 'Demo User',
+  email: 'demo@codigobilionario.com',
+  avatar: 'https://via.placeholder.com/150x150/FFD700/000?text=CB',
+  subscription: {
+    plan: 'premium',
+    status: 'active',
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  }
+}
+
 export const authService = {
   // Login user
   async login(credentials) {
+    if (IS_DEMO_MODE) {
+      // Demo mode - simulate successful login
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate network delay
+      const token = 'demo-token-' + Date.now()
+      localStorage.setItem('authToken', token)
+      localStorage.setItem('user', JSON.stringify(mockUser))
+      return { user: mockUser, token }
+    }
+    
     const response = await api.post('/auth/login', credentials)
     return response.data
   },
 
   // Register new user
   async register(userData) {
+    if (IS_DEMO_MODE) {
+      // Demo mode - simulate successful registration
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const token = 'demo-token-' + Date.now()
+      const user = { ...mockUser, name: userData.name, email: userData.email }
+      localStorage.setItem('authToken', token)
+      localStorage.setItem('user', JSON.stringify(user))
+      return { user, token }
+    }
+    
     const response = await api.post('/auth/register', userData)
     return response.data
   },
