@@ -39,10 +39,15 @@ export const demoAuth = {
         throw new Error('Senha deve ter pelo menos 6 caracteres')
       }
       
-      // Check if email already exists
+      // Check if email already exists (permitir sobrescrever em demo)
       const existingUser = DEMO_USERS.find(user => user.email === userData.email)
       if (existingUser) {
-        throw new Error('Este email já está em uso')
+        console.log('⚠️ Email já existe, removendo para permitir novo registro:', userData.email)
+        // Remover usuário existente para permitir novo registro
+        const index = DEMO_USERS.findIndex(user => user.email === userData.email)
+        if (index > -1) {
+          DEMO_USERS.splice(index, 1)
+        }
       }
       
       // Create new user
