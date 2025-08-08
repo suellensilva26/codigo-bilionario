@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
@@ -16,9 +16,23 @@ import {
   Download,
   Share2,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Settings,
+  SkipBack,
+  SkipForward,
+  RotateCcw,
+  Loader
 } from 'lucide-react'
 import ReactPlayer from 'react-player'
+import toast from 'react-hot-toast'
+
+// Services
+import { coursesService, MOCK_COURSES } from '../services/coursesService'
+import useAuthStore from '../store/authStore'
+import { SubscriptionGuard } from '../components/auth/ProtectedRoute'
 
 // Mock de curso - Em produção virá da API
 const mockCourse = {
