@@ -19,33 +19,72 @@ const mockUser = {
 export const authService = {
   // Login user
   async login(credentials) {
-    if (IS_DEMO_MODE) {
-      // Demo mode - simulate successful login
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate network delay
-      const token = 'demo-token-' + Date.now()
-      localStorage.setItem('authToken', token)
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      return { user: mockUser, token }
+    try {
+      if (IS_DEMO_MODE) {
+        // Demo mode - simulate successful login
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate network delay
+        
+        // Basic validation
+        if (!credentials.email || !credentials.password) {
+          return { success: false, error: 'Email e senha são obrigatórios' }
+        }
+        
+        const token = 'demo-token-' + Date.now()
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('user', JSON.stringify(mockUser))
+        return { success: true, user: mockUser, token }
+      }
+      
+      const response = await api.post('/auth/login', credentials)
+      return { success: true, ...response.data }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Erro ao fazer login. Tente novamente.' 
+      }
     }
-    
-    const response = await api.post('/auth/login', credentials)
-    return response.data
   },
 
   // Register new user
   async register(userData) {
-    if (IS_DEMO_MODE) {
-      // Demo mode - simulate successful registration
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const token = 'demo-token-' + Date.now()
-      const user = { ...mockUser, name: userData.name, email: userData.email }
-      localStorage.setItem('authToken', token)
-      localStorage.setItem('user', JSON.stringify(user))
-      return { user, token }
+    try {
+      if (IS_DEMO_MODE) {
+        // Demo mode - simulate successful registration
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Validate input
+        if (!userData.email || !userData.password || !userData.name) {
+          return { success: false, error: 'Todos os campos são obrigatórios' }
+        }
+        
+        if (userData.password.length < 6) {
+          return { success: false, error: 'Senha deve ter pelo menos 6 caracteres' }
+        }
+        
+        const token = 'demo-token-' + Date.now()
+        const user = { 
+          ...mockUser, 
+          name: userData.name, 
+          email: userData.email,
+          uid: 'demo-uid-' + Date.now()
+        }
+        
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        return { success: true, user, token }
+      }
+      
+      const response = await api.post('/auth/register', userData)
+      return { success: true, ...response.data }
+    } catch (error) {
+      console.error('Register error:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Erro ao criar conta. Tente novamente.' 
+      }
     }
-    
-    const response = await api.post('/auth/register', userData)
-    return response.data
   },
 
   // Logout user

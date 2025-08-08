@@ -31,8 +31,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Stripe webhook needs raw body - MUST be before express.json()
-app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+// Stripe webhook middleware (simplified for now)
+// app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
 // Regular JSON middleware
 app.use(express.json({ limit: '10mb' }));
