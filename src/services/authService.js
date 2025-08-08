@@ -1,10 +1,10 @@
 import api from './api'
 import { demoAuth } from '../lib/demoAuth'
 
-// Demo mode check - Sempre usar demo quando deployed
-const IS_DEMO_MODE = window.location.hostname === 'codigo-bilionario.vercel.app' || window.location.hostname !== 'localhost'
+// Demo mode check - SEMPRE USAR DEMO NO VERCEL
+const IS_DEMO_MODE = true // FORÇANDO DEMO MODE SEMPRE
 
-console.log('🎭 Demo Mode:', IS_DEMO_MODE, 'Hostname:', window.location.hostname)
+console.log('🎭 DEMO MODE FORÇADO:', IS_DEMO_MODE, 'Hostname:', window.location.hostname)
 
 export const authService = {
   // Login user

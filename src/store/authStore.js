@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { authService, analyticsService } from '../lib/firebase'
+import { authService } from '../services/authService'
 import toast from 'react-hot-toast'
 
 const useAuthStore = create(
@@ -26,11 +26,8 @@ const useAuthStore = create(
               isLoading: false
             })
             
-            // Track login event
-            analyticsService.trackEvent('login', {
-              method: 'email',
-              user_id: result.user.uid
-            })
+            // Analytics removido temporariamente para demo
+            console.log('✅ Login realizado com sucesso!')
             
             return { success: true }
           } else {
