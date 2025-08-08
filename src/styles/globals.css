@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles - Código Bilionário */
+@layer base {
+  * {
+    @apply box-border;
+  }
+  
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-cb-black text-cb-white font-inter antialiased;
+    @apply overflow-x-hidden;
+  }
+  
+  /* Scrollbar Styles */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-cb-gray-dark;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-cb-gold rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-cb-gold-dark;
+  }
+  
+  /* Selection */
+  ::selection {
+    @apply bg-cb-gold text-cb-black;
+  }
+}
+
+@layer components {
+  /* Button Base Styles */
+  .btn-base {
+    @apply inline-flex items-center justify-center;
+    @apply font-poppins font-semibold;
+    @apply rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-cb-black;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply relative overflow-hidden;
+  }
+  
+  .btn-primary {
+    @apply btn-base;
+    @apply bg-gradient-to-r from-cb-gold to-cb-gold-dark text-cb-black;
+    @apply hover:from-cb-gold-dark hover:to-cb-gold shadow-cb-premium;
+    @apply focus:ring-cb-gold transform hover:scale-105 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply btn-base;
+    @apply bg-cb-gray-medium text-cb-white border border-cb-gray-light;
+    @apply hover:bg-cb-gray-light hover:border-cb-gold/30 focus:ring-cb-gray-light;
+  }
+  
+  .btn-outline {
+    @apply btn-base;
+    @apply border-2 border-cb-gold text-cb-gold bg-transparent;
+    @apply hover:bg-cb-gold hover:text-cb-black focus:ring-cb-gold;
+  }
+  
+  .btn-ghost {
+    @apply btn-base;
+    @apply text-cb-gold bg-transparent hover:bg-cb-gold/10;
+    @apply focus:ring-cb-gold/50;
+  }
+  
+  .btn-danger {
+    @apply btn-base;
+    @apply bg-cb-red-rage text-white hover:bg-red-700;
+    @apply focus:ring-red-500;
+  }
+  
+  /* Input Styles */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-lg;
+    @apply bg-cb-gray-medium border border-cb-gray-light;
+    @apply text-cb-white placeholder-cb-gray-light;
+    @apply focus:border-cb-gold focus:ring-2 focus:ring-cb-gold/20;
+    @apply focus:outline-none transition-all duration-200;
+  }
+  
+  .input-error {
+    @apply border-cb-red-rage focus:border-cb-red-rage focus:ring-cb-red-rage/20;
+  }
+  
+  /* Card Styles */
+  .card-base {
+    @apply bg-cb-gray-medium rounded-lg border border-cb-gray-light;
+    @apply shadow-cb-dark backdrop-blur-sm;
+  }
+  
+  .card-premium {
+    @apply card-base border-cb-gold/30 shadow-cb-premium;
+  }
+  
+  /* Text Gradients */
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-cb-gold to-cb-gold-dark;
+    @apply bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-rage {
+    @apply bg-gradient-to-r from-cb-red-rage to-red-700;
+    @apply bg-clip-text text-transparent;
+  }
+  
+  /* Animation Classes */
+  .animate-glow {
+    @apply animate-glow;
+  }
+  
+  .animate-float {
+    @apply animate-float;
+  }
+  
+  .animate-shimmer {
+    @apply animate-shimmer;
+  }
+  
+  /* Layout Utilities */
+  .container-cb {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .section-spacing {
+    @apply py-16 lg:py-24;
+  }
+  
+  /* Custom Utilities */
+  .backdrop-blur-cb {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  .text-shadow-gold {
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+  
+  .border-gradient-gold {
+    border-image: linear-gradient(135deg, #FFD700, #B8860B) 1;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Custom clipping paths */
+  .clip-hero {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  }
+  
+  /* Text truncation utilities */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Custom Keyframes for additional animations */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Print styles */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .btn-primary {
+    @apply border-2 border-cb-black;
+  }
+  
+  .text-cb-gray-light {
+    @apply text-cb-white;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

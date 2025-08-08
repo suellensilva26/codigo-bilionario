@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="Código Bilionário - Pare de enriquecer gurus! 200+ cursos completos por R$ 97/mês. A vingança perfeita contra a indústria predatória de cursos." />
+    <meta name="keywords" content="cursos online, marketing digital, código bilionário, arsenal digital, anti-guru" />
+    <meta name="author" content="Código Bilionário" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Código Bilionário - Pare de Enriquecer Gurus!" />
+    <meta property="og:description" content="200+ cursos completos por R$ 97/mês. A vingança perfeita contra gurus caros!" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.jpg" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Código Bilionário" />
+    <meta name="twitter:description" content="Pare de enriquecer gurus! 200+ cursos por R$ 97/mês" />
+    
+    <title>Código Bilionário - Pare de Enriquecer Gurus!</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/hero-bg.mp4" as="video" type="video/mp4">
+    
+    <!-- Styles -->
+    <style>
+      /* Critical CSS - Anti-flicker */
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000000;
+        color: #FFFFFF;
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+      }
+      
+      /* Loading animation */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #000000 0%, #111111 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      
+      .loading-logo {
+        font-family: 'Poppins', sans-serif;
+        font-size: 3rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      /* Hide scrollbar */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      
+      * {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-logo">CÓDIGO BILIONÁRIO</div>
+    </div>
+    
+    <!-- React App -->
+    <div id="root"></div>
+    
+    <!-- Remove loading screen script -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease-out';
+            setTimeout(function() {
+              loadingScreen.remove();
+            }, 500);
+          }
+        }, 1000);
+      });
+    </script>
+    
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
