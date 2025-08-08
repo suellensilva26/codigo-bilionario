@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Store
-import { useAuthStore } from './store/authStore'
+import useAuthStore from './store/authStore'
 
 // Components
 import LoadingScreen from './components/common/LoadingScreen'
@@ -46,16 +46,18 @@ const pageTransition = {
 }
 
 function App() {
-  const { user, isLoading, checkAuth } = useAuthStore()
+  const { user, isLoading, isInitialized, initializeAuth } = useAuthStore()
 
-  // Check authentication on app startup
+  // Initialize Firebase Auth on app startup
   useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+    if (!isInitialized) {
+      initializeAuth()
+    }
+  }, [isInitialized, initializeAuth])
 
-  // Show loading screen while checking authentication
-  if (isLoading) {
-    return <LoadingScreen />
+  // Show loading screen while initializing authentication
+  if (!isInitialized) {
+    return <LoadingScreen message="Inicializando aplicação..." />
   }
 
   return (

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { authService } from '../services/authService'
+import { authService, analyticsService } from '../lib/firebase'
 import toast from 'react-hot-toast'
 
 const useAuthStore = create(
@@ -8,214 +8,230 @@ const useAuthStore = create(
     (set, get) => ({
       // State
       user: null,
-      token: null,
-      isLoading: true,
+      isLoading: false,
       isAuthenticated: false,
+      isInitialized: false,
 
       // Actions
       login: async (credentials) => {
         set({ isLoading: true })
+        
         try {
-          const response = await authService.login(credentials)
-          const { user, token } = response
+          const result = await authService.login(credentials)
           
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-            isLoading: false
-          })
-          
-          // Store token in localStorage for API calls
-          localStorage.setItem('authToken', token)
-          
-          toast.success(`Bem-vindo de volta, ${user.name}!`, {
-            icon: '🔥',
-            duration: 3000
-          })
-          
-          return { success: true, user }
+          if (result.success) {
+            set({
+              user: result.user,
+              isAuthenticated: true,
+              isLoading: false
+            })
+            
+            // Track login event
+            analyticsService.trackEvent('login', {
+              method: 'email',
+              user_id: result.user.uid
+            })
+            
+            return { success: true }
+          } else {
+            set({ isLoading: false })
+            return { success: false, error: result.error }
+          }
         } catch (error) {
           set({ isLoading: false })
-          const message = error.response?.data?.message || 'Erro ao fazer login'
-          toast.error(message)
-          return { success: false, error: message }
+          return { success: false, error: error.message }
         }
       },
-
+      
       register: async (userData) => {
         set({ isLoading: true })
+        
         try {
-          const response = await authService.register(userData)
-          const { user, token } = response
+          const result = await authService.register(userData)
           
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-            isLoading: false
-          })
-          
-          localStorage.setItem('authToken', token)
-          
-          toast.success('🚀 Bem-vindo ao arsenal digital!', {
-            duration: 4000
-          })
-          
-          return { success: true, user }
+          if (result.success) {
+            // Don't auto-login after register (email verification required)
+            set({ isLoading: false })
+            
+            // Track registration event
+            analyticsService.trackEvent('sign_up', {
+              method: 'email',
+              user_id: result.user.uid
+            })
+            
+            return { success: true }
+          } else {
+            set({ isLoading: false })
+            return { success: false, error: result.error }
+          }
         } catch (error) {
           set({ isLoading: false })
-          const message = error.response?.data?.message || 'Erro ao criar conta'
-          toast.error(message)
-          return { success: false, error: message }
+          return { success: false, error: error.message }
         }
       },
-
+      
       logout: async () => {
+        set({ isLoading: true })
+        
         try {
-          await authService.logout()
+          const result = await authService.logout()
+          
+          if (result.success) {
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false
+            })
+            
+            // Clear persisted data
+            localStorage.removeItem('auth-storage')
+            
+            // Track logout event
+            analyticsService.trackEvent('logout')
+            
+            return { success: true }
+          }
         } catch (error) {
-          // Even if logout fails on server, clear local state
           console.error('Logout error:', error)
-        } finally {
-          // Clear state
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false
-          })
-          
-          // Clear localStorage
-          localStorage.removeItem('authToken')
-          
-          toast.success('Logout realizado com sucesso!')
         }
+        
+        set({ isLoading: false })
       },
-
-      updateProfile: async (profileData) => {
+      
+      resetPassword: async (email) => {
         set({ isLoading: true })
+        
         try {
-          const response = await authService.updateProfile(profileData)
-          const updatedUser = response.data.user
-          
-          set({
-            user: updatedUser,
-            isLoading: false
-          })
-          
-          toast.success('Perfil atualizado!')
-          return { success: true, user: updatedUser }
+          const result = await authService.resetPassword(email)
+          set({ isLoading: false })
+          return result
         } catch (error) {
           set({ isLoading: false })
-          const message = error.response?.data?.message || 'Erro ao atualizar perfil'
-          toast.error(message)
-          return { success: false, error: message }
+          return { success: false, error: error.message }
         }
       },
-
-      refreshToken: async () => {
-        try {
-          const response = await authService.refreshToken()
-          const { token } = response
-          
-          set({ token })
-          localStorage.setItem('authToken', token)
-          
-          return { success: true }
-        } catch (error) {
-          // If refresh fails, logout user
-          get().logout()
-          return { success: false }
-        }
-      },
-
-      checkAuth: async () => {
-        const token = localStorage.getItem('authToken')
+      
+      resendEmailVerification: async () => {
+        set({ isLoading: true })
         
-        if (!token) {
-          set({ isLoading: false, isAuthenticated: false })
-          return
+        try {
+          const result = await authService.resendEmailVerification()
+          set({ isLoading: false })
+          return result
+        } catch (error) {
+          set({ isLoading: false })
+          return { success: false, error: error.message }
         }
+      },
+      
+      setLoading: (loading) => {
+        set({ isLoading: loading })
+      },
+      
+      setInitialized: (initialized) => {
+        set({ isInitialized: initialized })
+      },
+      
+      updateUser: async (updates) => {
+        const currentUser = get().user
+        if (!currentUser) return { success: false, error: 'Usuário não autenticado' }
         
         set({ isLoading: true })
         
         try {
-          const response = await authService.getProfile()
-          const user = response.user
+          const result = await authService.updateUserProfile(updates)
           
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-            isLoading: false
+          if (result.success) {
+            set({
+              user: { ...currentUser, ...updates },
+              isLoading: false
+            })
+            
+            // Track profile update
+            analyticsService.trackEvent('profile_update', {
+              user_id: currentUser.uid,
+              fields_updated: Object.keys(updates)
+            })
+          } else {
+            set({ isLoading: false })
+          }
+          
+          return result
+        } catch (error) {
+          set({ isLoading: false })
+          return { success: false, error: error.message }
+        }
+      },
+      
+      // Initialize auth state from Firebase
+      initializeAuth: () => {
+        return new Promise((resolve) => {
+          const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
+            if (firebaseUser && firebaseUser.emailVerified) {
+              // User is signed in and verified
+              const userData = await authService.getCurrentUser()
+              
+              if (userData) {
+                set({
+                  user: userData,
+                  isAuthenticated: true,
+                  isInitialized: true
+                })
+              } else {
+                set({
+                  user: null,
+                  isAuthenticated: false,
+                  isInitialized: true
+                })
+              }
+            } else {
+              // User is signed out or not verified
+              set({
+                user: null,
+                isAuthenticated: false,
+                isInitialized: true
+              })
+            }
+            
+            resolve()
+            unsubscribe() // Clean up listener after initialization
           })
-        } catch (error) {
-          // Token is invalid, clear everything
-          localStorage.removeItem('authToken')
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false
-          })
-        }
+        })
       },
-
-      forgotPassword: async (email) => {
-        set({ isLoading: true })
-        try {
-          await authService.forgotPassword(email)
-          set({ isLoading: false })
-          
-          toast.success('E-mail de recuperação enviado!')
-          return { success: true }
-        } catch (error) {
-          set({ isLoading: false })
-          const message = error.response?.data?.message || 'Erro ao enviar e-mail'
-          toast.error(message)
-          return { success: false, error: message }
-        }
-      },
-
-      resetPassword: async (token, password) => {
-        set({ isLoading: true })
-        try {
-          await authService.resetPassword(token, password)
-          set({ isLoading: false })
-          
-          toast.success('Senha alterada com sucesso!')
-          return { success: true }
-        } catch (error) {
-          set({ isLoading: false })
-          const message = error.response?.data?.message || 'Erro ao alterar senha'
-          toast.error(message)
-          return { success: false, error: message }
-        }
-      },
-
-      // Utility getters
-      isAdmin: () => {
-        const { user } = get()
-        return user?.role === 'admin'
-      },
-
+      
+      // Check if user has active subscription
       hasActiveSubscription: () => {
-        const { user } = get()
-        return user?.subscriptionStatus === 'active'
+        const user = get().user
+        return user?.subscription?.status === 'active' && 
+               user?.subscription?.plan !== 'free' &&
+               new Date(user?.subscription?.endDate) > new Date()
+      },
+      
+      // Check if user is admin
+      isAdmin: () => {
+        const user = get().user
+        return user?.role === 'admin' || user?.role === 'super_admin'
+      },
+      
+      // Get subscription info
+      getSubscriptionInfo: () => {
+        const user = get().user
+        return user?.subscription || { plan: 'free', status: 'inactive' }
       },
 
+      // Get subscription plan
       getSubscriptionPlan: () => {
-        const { user } = get()
-        return user?.plan || 'basic'
+        const user = get().user
+        return user?.subscription?.plan || 'free'
       },
 
+      // Check if user can access content based on plan
       canAccessContent: (requiredPlan = 'basic') => {
-        const { user } = get()
-        if (!user || user.subscriptionStatus !== 'active') return false
+        const user = get().user
+        if (!user || user.subscription?.status !== 'active') return false
         
-        const planHierarchy = { basic: 1, premium: 2, elite: 3 }
-        const userPlanLevel = planHierarchy[user.plan] || 0
+        const planHierarchy = { free: 0, basic: 1, premium: 2, elite: 3 }
+        const userPlanLevel = planHierarchy[user.subscription?.plan] || 0
         const requiredLevel = planHierarchy[requiredPlan] || 0
         
         return userPlanLevel >= requiredLevel
@@ -226,11 +242,11 @@ const useAuthStore = create(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
-        isAuthenticated: state.isAuthenticated,
-      }),
+        isAuthenticated: state.isAuthenticated
+      })
     }
   )
 )
 
 export { useAuthStore }
+export default useAuthStore
